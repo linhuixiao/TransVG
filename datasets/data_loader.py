@@ -18,6 +18,7 @@ import numpy as np
 import os.path as osp
 import scipy.io as sio
 import torch.utils.data as data
+
 sys.path.append('.')
 
 from PIL import Image
@@ -29,7 +30,7 @@ def read_examples(input_line, unique_id):
     """Read a list of `InputExample`s from an input file."""
     examples = []
     # unique_id = 0
-    line = input_line #reader.readline()
+    line = input_line  # reader.readline()
     # if not line:
     #     break
     line = line.strip()
@@ -46,6 +47,7 @@ def read_examples(input_line, unique_id):
     # unique_id += 1
     return examples
 
+
 ## Bert text encoding
 class InputExample(object):
     def __init__(self, unique_id, text_a, text_b):
@@ -53,14 +55,17 @@ class InputExample(object):
         self.text_a = text_a
         self.text_b = text_b
 
+
 class InputFeatures(object):
     """A single set of features of data."""
+
     def __init__(self, unique_id, tokens, input_ids, input_mask, input_type_ids):
         self.unique_id = unique_id
         self.tokens = tokens
         self.input_ids = input_ids
         self.input_mask = input_mask
         self.input_type_ids = input_type_ids
+
 
 def convert_examples_to_features(examples, seq_length, tokenizer):
     """Loads a data file into a list of `InputBatch`s."""
@@ -122,8 +127,10 @@ def convert_examples_to_features(examples, seq_length, tokenizer):
                 input_type_ids=input_type_ids))
     return features
 
+
 class DatasetNotFoundError(Exception):
     pass
+
 
 class TransVGDataset(data.Dataset):
     SUPPORTED_DATASETS = {
@@ -148,6 +155,8 @@ class TransVGDataset(data.Dataset):
             'splits': ('train', 'val', 'test')}
     }
 
+    # args.data_root default='./ln_data/', args.split_root default='data', '--dataset', default='referit'
+    # split = test, testA, val, args.max_query_len = 20
     def __init__(self, data_root, split_root='data', dataset='referit', 
                  transform=None, return_idx=False, testmode=False,
                  split='train', max_query_len=128, lstm=False, 
@@ -162,7 +171,7 @@ class TransVGDataset(data.Dataset):
         self.testmode = testmode
         self.split = split
         self.tokenizer = BertTokenizer.from_pretrained(bert_model, do_lower_case=True)
-        self.return_idx=return_idx
+        self.return_idx = return_idx
 
         assert self.transform is not None
 
@@ -174,14 +183,15 @@ class TransVGDataset(data.Dataset):
         if self.dataset == 'referit':
             self.dataset_root = osp.join(self.data_root, 'referit')
             self.im_dir = osp.join(self.dataset_root, 'images')
+            # TODO：有splits，但是里面啥都没有
             self.split_dir = osp.join(self.dataset_root, 'splits')
-        elif  self.dataset == 'flickr':
+        elif self.dataset == 'flickr':
             self.dataset_root = osp.join(self.data_root, 'Flickr30k')
             self.im_dir = osp.join(self.dataset_root, 'flickr30k_images')
         else:   ## refcoco, etc.
             self.dataset_root = osp.join(self.data_root, 'other')
-            self.im_dir = osp.join(
-                self.dataset_root, 'images', 'mscoco', 'images', 'train2014')
+            self.im_dir = osp.join(self.dataset_root, 'images', 'mscoco', 'images', 'train2014')
+            # TODO： 这个split_dir 不太理解，根本没有
             self.split_dir = osp.join(self.dataset_root, 'splits')
 
         if not self.exists_dataset():
@@ -190,7 +200,9 @@ class TransVGDataset(data.Dataset):
                 https://drive.google.com/open?id=1cZI562MABLtAzM6YU4WmKPFFguuVr0lZ')
             exit(0)
 
+        # 数据集拆分的目录：eg. ./data/unc
         dataset_path = osp.join(self.split_root, self.dataset)
+        # 返回一组元组，valid_splits = ('train', 'val', 'test')
         valid_splits = self.SUPPORTED_DATASETS[self.dataset]['splits']
 
         if self.lstm:
@@ -208,7 +220,10 @@ class TransVGDataset(data.Dataset):
             splits = ['train', 'val'] if split == 'trainval' else [split]
         for split in splits:
             imgset_file = '{0}_{1}.pth'.format(self.dataset, split)
+            # TODO: 得到完整的拆分索引文件的目录，eg. data/unc+/unc+_testA.pth
             imgset_path = osp.join(dataset_path, imgset_file)
+            # self.images 是一个空列表，把整个索引文件load到空列表中
+            # TODO: 直接用 torch.load 进行加载
             self.images += torch.load(imgset_path)
 
     def exists_dataset(self):

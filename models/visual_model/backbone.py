@@ -62,11 +62,12 @@ class BackboneBase(nn.Module):
         for name, parameter in backbone.named_parameters():
             if 'layer2' not in name and 'layer3' not in name and 'layer4' not in name:
                 parameter.requires_grad_(False)
-        if return_interm_layers:
+        if return_interm_layers:  # 默认 false
             return_layers = {"layer1": "0", "layer2": "1", "layer3": "2", "layer4": "3"}
         else:
             return_layers = {'layer4': "0"}
         self.body = IntermediateLayerGetter(backbone, return_layers=return_layers)
+        # 赋值给channel
         self.num_channels = num_channels
 
     def forward(self, tensor_list: NestedTensor):
@@ -85,16 +86,19 @@ class Backbone(BackboneBase):
     def __init__(self, name: str,
                  return_interm_layers: bool,
                  dilation: bool):
-
+        # 检查 name 是否为 model 中的模型，是的话返回属性值，猜测应该返回一个Resnet50初始化接口，之后传入pretrain，norm_layer 进行初始化
         backbone = getattr(torchvision.models, name)(
             replace_stride_with_dilation=[False, False, dilation],
             pretrained=False, norm_layer=FrozenBatchNorm2d)
             # pretrained=is_main_process(), norm_layer=FrozenBatchNorm2d)
         assert name in ('resnet50', 'resnet101')
         num_channels = 2048
+        # 进一步初始化
+        # TODO： channel 为何是 2048？
         super().__init__(name, backbone, num_channels, return_interm_layers)
 
 
+# nn.Sequential 将以特定神经网络模块为元素的有序字典（OrderedDict）为参数传入。
 class Joiner(nn.Sequential):
     def __init__(self, backbone, position_embedding):
         super().__init__(backbone, position_embedding)
@@ -112,10 +116,16 @@ class Joiner(nn.Sequential):
 
 
 def build_backbone(args):
+    # TODO： 现在只是声明 pos embedding，什么时候是正式使用？
     position_embedding = build_position_encoding(args)
     # train_backbone = args.lr_detr > 0
+    # 不返回中间层
     return_interm_layers = False
+    # 初始化backbone，先使用 Resnet
+    # 默认 args.backbone 是 resnet50
     backbone = Backbone(args.backbone, return_interm_layers, args.dilation)
+    # 将 resent 初始化好了之后后面再加上 pos embedding
+    # 将以特定神经网络模块为元素的有序字典（OrderedDict）为参数传入，组建一个模型序列。
     model = Joiner(backbone, position_embedding)
     model.num_channels = backbone.num_channels
     return model

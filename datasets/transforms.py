@@ -45,6 +45,7 @@ def resize_according_to_short_side(img, box, size):
     return img, box
 
 
+# object是最顶层的基类
 class Compose(object):
     def __init__(self, transforms):
         self.transforms = transforms

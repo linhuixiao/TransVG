@@ -15,6 +15,7 @@ def trans_vg_eval_val(pred_boxes, gt_boxes):
     return iou, accu
 
 def trans_vg_eval_test(pred_boxes, gt_boxes):
+    # 输出的坐标xy是box的中心，不是定格位置
     pred_boxes = xywh2xyxy(pred_boxes)
     pred_boxes = torch.clamp(pred_boxes, 0, 1)
     gt_boxes = xywh2xyxy(gt_boxes)

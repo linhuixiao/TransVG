@@ -35,6 +35,7 @@ class DETR(nn.Module):
         else:
             hidden_dim = backbone.num_channels
 
+        # TODO: 在训练时，都是需要更新的
         if not train_backbone:
             for p in self.backbone.parameters():
                 p.requires_grad_(False)
@@ -77,17 +78,23 @@ class DETR(nn.Module):
 
 
 def build_detr(args):
+    """ DETR 之前还需要构建backbone """
     backbone = build_backbone(args)
+    # args.lr_visu_cnn 默认为 0，再训练时，都是大于0的，都是需要更新的
     train_backbone = args.lr_visu_cnn > 0
     train_transformer = args.lr_visu_tra > 0
+    # args.detr_enc_num 默认是 6
     if args.detr_enc_num > 0:
+        # TODO： 初始化仅有encoder的 Transformer，常规操作
         transformer = build_transformer(args)
     else:
         transformer = None
 
+    # TODO：把前面的 backbone模块 和 transformer 模块构造好，再接起来，就是 DETR
     model = DETR(
         backbone,
         transformer,
+        # 查询的数量，默认 100
         num_queries=args.num_queries,
         train_backbone=train_backbone,
         train_transformer=train_transformer

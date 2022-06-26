@@ -15,6 +15,7 @@ def make_transforms(args, image_set, is_onestage=False):
         ])
         return normalize
 
+    # '--imsize', default=640
     imsize = args.imsize
 
     if image_set == 'train':
@@ -29,7 +30,7 @@ def make_transforms(args, image_set, is_onestage=False):
             crop_prob = 0.5
         else:
             crop_prob = 0.
-    
+
         return T.Compose([
             T.RandomSelect(
                 T.RandomResize(scales),
@@ -49,6 +50,7 @@ def make_transforms(args, image_set, is_onestage=False):
 
 
     if image_set in ['val', 'test', 'testA', 'testB']:
+        # 现在还只是初始化一个预处理器，将图片沿着长边resize到目标大小，之后再将图片转化为tensor，之后再将短边补齐pad到目标size
         return T.Compose([
             T.RandomResize([imsize]),
             T.ToTensor(),
@@ -58,10 +60,12 @@ def make_transforms(args, image_set, is_onestage=False):
     raise ValueError(f'unknown {image_set}')
 
 
+# args.data_root default='./ln_data/', args.split_root default='data', '--dataset', default='referit'
+# split = test, testA, val, args.max_query_len = 20
 def build_dataset(split, args):
     return TransVGDataset(data_root=args.data_root,
-                        split_root=args.split_root,
-                        dataset=args.dataset,
-                        split=split,
-                        transform=make_transforms(args, split),
-                        max_query_len=args.max_query_len)
+                          split_root=args.split_root,
+                          dataset=args.dataset,
+                          split=split,
+                          transform=make_transforms(args, split),
+                          max_query_len=args.max_query_len)

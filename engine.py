@@ -16,10 +16,13 @@ import utils.loss_utils as loss_utils
 import utils.eval_utils as eval_utils
 
 
-def train_one_epoch(args, model: torch.nn.Module, data_loader: Iterable, 
-                    optimizer: torch.optim.Optimizer, device: torch.device, 
+# TODO: 训练核心代码
+def train_one_epoch(args, model: torch.nn.Module, data_loader: Iterable,
+                    optimizer: torch.optim.Optimizer, device: torch.device,
                     epoch: int, max_norm: float = 0):
+    # 设置模型在训练模式
     model.train()
+    # TODO: metric_logger 是个啥东西？
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
     header = 'Epoch: [{}]'.format(epoch)
@@ -53,7 +56,7 @@ def train_one_epoch(args, model: torch.nn.Module, data_loader: Iterable,
         
         optimizer.zero_grad()
         losses.backward()
-        if max_norm > 0:
+        if max_norm > 0:  # max_norm 默认为 0
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm)
         optimizer.step()
         
@@ -67,6 +70,7 @@ def train_one_epoch(args, model: torch.nn.Module, data_loader: Iterable,
 
 @torch.no_grad()
 def validate(args, model: torch.nn.Module, data_loader: Iterable, device: torch.device):
+    # 设置模型在测试模式
     model.eval()
 
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -98,6 +102,7 @@ def evaluate(args, model: torch.nn.Module, data_loader: Iterable, device: torch.
 
     pred_box_list = []
     gt_box_list = []
+    # TODO：数据处理进度条
     for _, batch in enumerate(tqdm(data_loader)):
         img_data, text_data, target = batch
         batch_size = img_data.tensors.size(0)
@@ -105,11 +110,13 @@ def evaluate(args, model: torch.nn.Module, data_loader: Iterable, device: torch.
         img_data = img_data.to(device)
         text_data = text_data.to(device)
         target = target.to(device)
+        # TODO：核心模型计算
         output = model(img_data, text_data)
 
         pred_box_list.append(output.cpu())
         gt_box_list.append(target.cpu())
 
+    # torch.cat 把列表的列表拼接成一个列表，第0维为每一次计算的结果，以便于后续进行一次性IOU计算
     pred_boxes = torch.cat(pred_box_list, dim=0)
     gt_boxes = torch.cat(gt_box_list, dim=0)
     total_num = gt_boxes.shape[0]
@@ -118,6 +125,7 @@ def evaluate(args, model: torch.nn.Module, data_loader: Iterable, device: torch.
     result_tensor = torch.tensor([accu_num, total_num]).to(device)
     
     torch.cuda.synchronize()
+    # TODO：all_reduce() 什么意思？
     dist.all_reduce(result_tensor)
 
     accuracy = float(result_tensor[0]) / float(result_tensor[1])

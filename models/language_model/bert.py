@@ -24,7 +24,7 @@ class BERT(nn.Module):
         else:
             self.num_channels = 1024
         self.enc_num = enc_num
-
+        # TODO：一句话直接把模型加载了, 下面代码下载并加载预训练的bert-base-uncased模型：
         self.bert = BertModel.from_pretrained(name)
 
         if not train_bert:
@@ -48,7 +48,9 @@ class BERT(nn.Module):
 
 def build_bert(args):
     # position_embedding = build_position_encoding(args)
+    # args.lr_bert 默认为0
     train_bert = args.lr_bert > 0
+    # args.bert_model 默认为 bert-base-uncased，默认不 train，max_query_len = 20，bert_enc_num = 12
     bert = BERT(args.bert_model, train_bert, args.hidden_dim, args.max_query_len, args.bert_enc_num)
     # model = Joiner(bert, position_embedding)
     # model.num_channels = bert.num_channels

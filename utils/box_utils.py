@@ -23,6 +23,7 @@ def bbox_iou(box1, box2, x1y1x2y2=True):
     inter_rect_x2 = torch.min(b1_x2, b2_x2)
     inter_rect_y2 = torch.min(b1_y2, b2_y2)
     # Intersection area
+    # inter_rect_x2 - inter_rect_x1 是有可能是负数的，此时边界框在此方向上无交集不重合，取为0，则IOU必为0
     inter_area = torch.clamp(inter_rect_x2 - inter_rect_x1, 0) * torch.clamp(inter_rect_y2 - inter_rect_y1, 0)
     # Union Area
     b1_area = (b1_x2 - b1_x1) * (b1_y2 - b1_y1)
@@ -54,6 +55,7 @@ def box_iou(boxes1, boxes2):
     lt = torch.max(boxes1[:, None, :2], boxes2[:, :2])  # [N,M,2]
     rb = torch.min(boxes1[:, None, 2:], boxes2[:, 2:])  # [N,M,2]
 
+    # clap 将数值逐各元素夹紧在min和max之间
     wh = (rb - lt).clamp(min=0)  # [N,M,2]
     inter = wh[:, :, 0] * wh[:, :, 1]  # [N,M]
 

@@ -94,7 +94,7 @@ class TransformerEncOnly(nn.Module):
         mask = mask.flatten(1)
 
         memory = self.encoder(src, src_key_padding_mask=mask, pos=pos_embed)
-        
+
         return memory.permute(1, 2, 0).view(bs, c, h, w)
 
 
@@ -319,6 +319,7 @@ def build_transformer(args):
         nhead=args.nheads,
         dim_feedforward=args.dim_feedforward,
         num_encoder_layers=args.enc_layers,
+        # TODO：args.dec_layers 默认为 0，不需要解码层
         num_decoder_layers=args.dec_layers,
         normalize_before=args.pre_norm,
         return_intermediate_dec=True,
