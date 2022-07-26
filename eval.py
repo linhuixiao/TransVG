@@ -19,7 +19,7 @@ from datasets import build_dataset
 from engine import train_one_epoch, evaluate
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = '7'  # batch_size max=768，0、1在用
+# os.environ["CUDA_VISIBLE_DEVICES"] = '7'  # batch_size max=768，0、1在用
 
 
 def get_args_parser():

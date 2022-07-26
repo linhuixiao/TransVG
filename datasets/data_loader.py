@@ -187,7 +187,8 @@ class TransVGDataset(data.Dataset):
             self.split_dir = osp.join(self.dataset_root, 'splits')
         elif self.dataset == 'flickr':
             self.dataset_root = osp.join(self.data_root, 'Flickr30k')
-            self.im_dir = osp.join(self.dataset_root, 'flickr30k_images')
+            # self.im_dir = osp.join(self.dataset_root, 'flickr30k_images')
+            self.im_dir = osp.join(self.dataset_root, 'flickr30k-images')
         else:   ## refcoco, etc.
             self.dataset_root = osp.join(self.data_root, 'other')
             self.im_dir = osp.join(self.dataset_root, 'images', 'mscoco', 'images', 'train2014')

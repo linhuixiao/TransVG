@@ -52,7 +52,7 @@ class Transformer(nn.Module):
         bs, c, h, w = src.shape
         src = src.flatten(2).permute(2, 0, 1)
         pos_embed = pos_embed.flatten(2).permute(2, 0, 1)
-        mask = mask.flatten(1)
+        mask = mask.flatten(1)  # 降成2维
         memory = self.encoder(src, src_key_padding_mask=mask, pos=pos_embed)
 
         if self.decoder is not None:

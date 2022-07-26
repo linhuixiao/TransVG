@@ -102,14 +102,17 @@ def get_args_parser():
 
     # Dataset parameters
     """ 数据集根目录 """
-    parser.add_argument('--data_root', type=str, default='./ln_data/',
-                        help='path to ReferIt splits data folder')
+    # TODO: --data_root /hdd/lhxiao/pseudo-q/data, Flickr30k  other  pseudo_samples，只使用了里面的图片，并没有使用里面的分割
+    parser.add_argument('--data_root', type=str, default='./ln_data/', help='path to ReferIt splits data folder')
     # TODO： Split root 是拆分索引文件的文件目录，位于 ./data
+    # TODO: --split_root /hdd/lhxiao/pseudo-q/data/pseudo_samples, flickr  gref  gref_umd  referit  unc  unc+
+    #  这个目录和原始 ref 目录下的 'refs(google).p'  'refs(umd).p' 不同，划分更细致 unc_testA.pth  unc_testB.pth
+    #  unc_train_pseudo.pth  unc_val.pth，这个目录中的pth文件包含了 拆分的图片索引、bbox和引用表达的句子
     parser.add_argument('--split_root', type=str, default='data', help='location of pre-parsed dataset info')
     parser.add_argument('--dataset', default='referit', type=str, help='referit/unc/unc+/gref/gref_umd')
     parser.add_argument('--max_query_len', default=20, type=int,
                         help='maximum time steps (lang length) per batch')
-    
+
     # dataset parameters
     parser.add_argument('--output_dir', default='./outputs',
                         help='path where to save, empty for no saving')
@@ -146,6 +149,7 @@ def main(args):
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
+    print('### INFO ### torch.backends.cudnn.benchmark = {}'.format(torch.backends.cudnn.benchmark))
 
     # build model
     # TODO： 核心一步，初始化模型结构，TransVG(args)
@@ -210,11 +214,11 @@ def main(args):
     # build dataset
     # TODO: 构建训练数据集和验证数据集，此部分代码和测试不一样
     dataset_train = build_dataset('train', args)
-    dataset_val   = build_dataset('val', args)
+    dataset_val = build_dataset('val', args)
     ## note certain dataset does not have 'test' set:
     ## 'unc': {'train', 'val', 'trainval', 'testA', 'testB'}
     # dataset_test  = build_dataset('test', args)
-    
+
     if args.distributed:
         # 分布式数据并行，分布式数据并行采样
         sampler_train = DistributedSampler(dataset_train, shuffle=True)
@@ -264,7 +268,7 @@ def main(args):
         lr_scheduler.step()
         # TODO：进行验证
         val_stats = validate(args, model, data_loader_val, device)
-        
+
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                      **{f'validation_{k}': v for k, v in val_stats.items()},
                      'epoch': epoch,
